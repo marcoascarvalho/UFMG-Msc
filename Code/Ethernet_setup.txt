@@ -1,0 +1,179 @@
+         ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+         º    TITLE:  Keil C51 v7.00 port of Adam Dunkels' uIP v0.9 º
+         º REVISION:  VER 0.0                                       º
+         º REV.DATE:  02-02-05                                      º
+         º  ARCHIVE:                                                º
+         º   AUTHOR:  Copyright (c) 2005, Murray R. Van Luyn.       º
+         ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼        
+
+
+INTRODUCTION.
+
+    This is the Keil C51 compiler/ 8051 microcontroller port of Adam Dunkels'
+    uIP TCP/IP stack v0.9.
+
+    This file describes how to setup the uIP web server application to 
+    communicate with a PC's network card using TCP/IP protocols. Upon 
+    completion you will be able to retrieve a number of test pages from a 
+    network card equipped, 8051 based server using a web browser.
+
+
+
+COMPILING.
+
+    First off, download the latest version of the uIP TCP/IP stack. It has 
+    lots of other network applications, and has all the tools you will need to
+    develop your own web content. In addition, the original distribution has
+    very good documentation that will clear up any points about how uIP works,
+    and help you to understand the methodology employed in it's design.
+
+                           http://www.sics.se/~adam/uip/
+
+    The Ethernet port project file's configuration is for an Atmel T89C51AC2,
+    single chip microcontroller with an 18.432 MHz Xtal. Change the controller
+    type and crystal frequency to suit your hardware, and also set ETH_CPU_XTAL
+    to an appropriate value in the file etherdev.h. You may need to adjust
+    ETH_DATA_PORT, ETH_ADDR_PORT & ETH_CTRL_PORT in the file etherdev.h to 
+    match your 8051 port to RTL8019AS network card wiring scheme. Compile for
+    the small memory model .... That's it! 
+
+
+
+CABLING.
+
+    If you will be connecting the uIP webserver's 8051 hardware via a router
+    or hub, then an ordinary twisted pair ethernet cable may be used. However,
+    to communicate directly with a PC via it's network card, you will need a 
+    'cross over' 10baseT twisted pair cable.
+
+ 
+                      RJ-45                             RJ-45
+
+                        1   TD+ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ RD+   3
+                        2   TD- ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ RD-   6
+                        3   RD+ ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ TD+   1
+                        6   RD- ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ TD-   2
+
+                             Cross over 10baseT cable.
+
+
+
+NETWORK CARD WIRING.
+
+    The ethernet driver in this release is for a Realtek RTL8019AS based 
+    network interface card. Some effort was made to keep the driver more NE2000
+    compatible than it need be for the Realtek controller. Despite this, it
+    was found that some otherwise 100% NE2000 compatible NICs wouldn't work
+    with the driver. You may find an NE2000 compatible NIC that will, but a
+    safe bet is the RTL8019AS for which the driver was specifically written.
+    
+    Make note of the 8051 ports that have been assigned to the various data,
+    addressing and control functions in the file etherdev.h. Either wire your 
+    implementation accordingly, or adjust these defines to suit your hardware.
+
+
+        #define ETH_DATA_PORT P0     // Adjust this to suit hardware.
+        #define ETH_ADDR_PORT P2     // Adjust this to suit hardware.
+        #define ETH_CTRL_PORT P3     // Adjust this to suit hardware.
+
+
+    This is then the 8051 port to ISA 16 bit edge card (or controller chip pin)
+    mapping.
+
+        SD0   ETH_DATA_PORT^0  // ISA slot pin A9,  RTL8019AS pin 36
+        SD1   ETH_DATA_PORT^1  // ISA slot pin A8,  RTL8019AS pin 37
+        SD2   ETH_DATA_PORT^2  // ISA slot pin A7,  RTL8019AS pin 38
+        SD3   ETH_DATA_PORT^3  // ISA slot pin A6,  RTL8019AS pin 39
+        SD4   ETH_DATA_PORT^4  // ISA slot pin A5,  RTL8019AS pin 40
+        SD5   ETH_DATA_PORT^5  // ISA slot pin A4,  RTL8019AS pin 41
+        SD6   ETH_DATA_PORT^6  // ISA slot pin A3,  RTL8019AS pin 42
+        SD7   ETH_DATA_PORT^7  // ISA slot pin A2,  RTL8019AS pin 43
+        SA0   ETH_ADDR_PORT^0  // ISA slot pin A31, RTL8019AS pin 5
+        SA1   ETH_ADDR_PORT^1  // ISA slot pin A30, RTL8019AS pin 7
+        SA2   ETH_ADDR_PORT^2  // ISA slot pin A29, RTL8019AS pin 8
+        SA3   ETH_ADDR_PORT^3  // ISA slot pin A28, RTL8019AS pin 9
+        SA4   ETH_ADDR_PORT^4  // ISA slot pin A27, RTL8019AS pin 10
+        IOW   ETH_CTRL_PORT^6  // ISA slot pin B13, RTL8019AS pin 30 active low
+        IOR   ETH_CTRL_PORT^7  // ISA slot pin B14, RTL8019AS pin 29 active low
+        SA5   GND              // ISA slot pin A26, RTL8019AS pin 11
+        SA6   GND              // ISA slot pin A25, RTL8019AS pin 12
+        SA7   GND              // ISA slot pin A24, RTL8019AS pin 13
+        SA8   +5V              // ISA slot pin A23, RTL8019AS pin 15
+        SA9   +5V              // ISA slot pin A22, RTL8019AS pin 16
+        SA10  GND              // ISA slot pin A21, RTL8019AS pin 18
+        SA11  GND              // ISA slot pin A20, RTL8019AS pin 19
+        SA12  GND              // ISA slot pin A19, RTL8019AS pin 20
+        SA13  GND              // ISA slot pin A18, RTL8019AS pin 21
+        SA14  GND              // ISA slot pin A17, RTL8019AS pin 22
+        SA15  GND              // ISA slot pin A16, RTL8019AS pin 23
+        SA16  GND              // ISA slot pin A15, RTL8019AS pin 24
+        SA17  GND              // ISA slot pin A14, RTL8019AS pin 25
+        SA18  GND              // ISA slot pin A13, RTL8019AS pin 26
+        SA19  GND              // ISA slot pin A12, RTL8019AS pin 27
+        AEN   GND              // ISA slot pin A11, RTL8019AS pin 34
+        SMEMW +5V              // ISA slot pin B11, RTL8019AS pin 32
+        SMEMR +5V              // ISA slot pin B12, RTL8019AS pin 31
+        GND   GND              // ISA slot pin B1
+       +5VDC  +5V              // ISA slot pin B3
+        GND   GND              // ISA slot pin B31
+       +5VDC  +5V              // ISA slot pin B29
+        RESET  ?               // ISA slot pin B2, active high reset input
+
+
+
+         ³                ÚÄÄÄÄÄ¿                                     ³
+         ³C18           C1³     ³A31         Component side         A1³
+         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾     ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾ 
+          D18           D1       B31          Solder side           B1
+
+                    ISA 16 bit expansion slot edge connector.  
+
+
+    You will note that there are no interrupt signals present. That's because
+    the driver employs network controller, communication status polling.
+
+    Check that you have a large enough 5V supply. Network cards are quite power
+    hungry, particularly before a 10baseT link is established and the 5v to 9v
+    voltage converter for 10base2 is still switched on. Standard 1 Amp 7805's
+    will need a reasonable heatsink.
+ 
+
+
+WINDOWS SETUP.
+
+    This is roughly how to set up a Windows computer to communicate with the 
+    uIP webserver through an ethernet cable. The exact procedure will depend on
+    your version of OS. 
+
+    We assume that you already have a network interface card fixed inside your 
+    PC, and that all drivers have been installed.
+
+
+ 1. Assign an ip address to the PC's network card .
+
+    Press Start > Settings > Control Panel.
+    Double click the "Network" icon.
+    Highlight the "TCP/IP -> ?" network component for your NIC.
+    Press "Properties".
+    On the IP Address tab check "Specify an IP address".
+    Enter 192.168.0.1 for the IP Address.
+    Enter 255.255.255.0 for the Subnet Mask.
+    Press "OK".
+    Press "OK" again.
+
+
+ 2. Setup Internet Explorer to use the Ethernet link.
+
+    Press Start > Settings > Control Panel.
+    Double click "Internet Options".
+    On the Connections tab check "Never dial a connection".
+    Press "OK".
+
+
+    You should be able to connect to the uIP web server via the network card
+    by entering the address http://192.168.0.3, or any address you may have 
+    the server adjusted to respond to. The server needs to be set for an
+    ip address in the same domain as the client port. We have set this to the
+    private, class C network address 192.168.0.1 here, so the corresponding 
+    server ip addresses are between 192.168.0.2 and 192.168.0.254 with an 
+    associated netmask of 255.255.255.0
